@@ -14,7 +14,7 @@ A minimal operating system written from scratch, currently featuring a basic ter
 ## 🎯 Planned Features
 
 ### Short Term
-- [ ] Color support for terminal
+- [✅] Color support for terminal
 - [ ] Cursor movement (arrow keys)
 - [ ] Command history
 - [ ] Basic command parser
