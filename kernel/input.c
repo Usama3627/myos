@@ -1,46 +1,11 @@
-"""
-This is a simple kernel in C that allows you to type and see the text you type on the screen.
-It uses the BIOS keyboard interrupt to read input from the keyboard.
-It is a simple kernel that does not do anything else.
+/*
+ * Keyboard input functions for the kernel
+ * Handles keyboard scancode reading and conversion to ASCII
+ */
 
-Author: @Usama3627
-Date: 2025-05-22
-"""
+#include "kernel.h"
 
-#define VIDEO_MEMORY 0xb8000
-#define SCREEN_WIDTH 80
-#define SCREEN_HEIGHT 25
-#define WHITE_ON_BLACK 0x07
-
-static char* vidptr = (char*)VIDEO_MEMORY;
-static unsigned int cursor_pos = 0;
 static unsigned char last_scancode = 0;
-
-void kclear(void) {
-    unsigned int i = 0;
-    while (i < SCREEN_WIDTH * SCREEN_HEIGHT * 2) {
-        vidptr[i] = ' ';
-        vidptr[i + 1] = WHITE_ON_BLACK;
-        i += 2;
-    }
-    cursor_pos = 0;
-}
-
-void kputc(char c) {
-    vidptr[cursor_pos] = c;
-    vidptr[cursor_pos + 1] = WHITE_ON_BLACK;
-    cursor_pos += 2;
-
-    if (cursor_pos >= SCREEN_WIDTH * SCREEN_HEIGHT * 2) {
-        cursor_pos = 0;
-    }
-}
-
-void kprint(const char* str) {
-    while (*str != '\0') {
-        kputc(*str++);
-    }
-}
 
 char kgetc(void) {
     while (1) {
@@ -48,11 +13,9 @@ char kgetc(void) {
         // Read from keyboard port
         asm volatile("inb %1, %0" : "=a"(scancode) : "Nd"(0x60));
         
-        // Check for key press
         if (scancode < 0x80 && scancode != last_scancode) {
             last_scancode = scancode;
             
-            // Convert scancode to ASCII (US QWERTY layout)
             char ascii = 0;
             switch (scancode) {
                 // First row (QWERTY)
@@ -134,22 +97,9 @@ void kgets(char* buffer, unsigned int max_length) {
             buffer[i++] = c;
             kputc(c);
         }
+        if (c == '\n') {
+            break;
+        }
     }
     buffer[i] = '\0'; 
-}
-
-void kmain(void) {
-    kclear();
-    
-    kprint("Hello from C kernel!\n");
-    kprint("Type something: ");
-    
-    char input_buffer[10];
-    
-    while (1) {
-        kgets(input_buffer, 10);
-        kprint("\nYou typed: ");
-        kprint(input_buffer);
-        kprint("\nType something: ");
-    }
-}
+} 

@@ -14,7 +14,7 @@ A minimal operating system written from scratch, currently featuring a basic ter
 ## 🎯 Planned Features
 
 ### Short Term
-- [ ] Color support for terminal
+- [✅] Color support for terminal
 - [ ] Cursor movement (arrow keys)
 - [ ] Command history
 - [ ] Basic command parser
@@ -67,12 +67,20 @@ make run
 ```
 
 ## 📁 Project Structure
-myos/<br>
-├── loader.s &nbsp;&nbsp;&nbsp;&nbsp;# Assembly bootstrap code<br>
-├── kmain.c &nbsp;&nbsp;&nbsp;&nbsp;# Main kernel code<br>
-├── grub.cfg &nbsp;&nbsp;&nbsp;&nbsp;# GRUB configuration<br>
-├── Makefile &nbsp;&nbsp;&nbsp;&nbsp;# Build configuration<br>
-└── README.md &nbsp;&nbsp;&nbsp;&nbsp;# This file<br>
+```
+myos/
+├── kernel/
+│   ├── kernel.h        # Main header file with function declarations
+│   ├── main.c          # Main kernel entry point
+│   ├── screen.c        # Screen and VGA management functions
+│   ├── input.c         # Keyboard input handling
+│   └── utils.c         # Utility functions (string manipulation, etc.)
+├── loader.s            # Assembly bootloader
+├── link.ld             # Linker script
+├── grub.cfg            # GRUB configuration
+├── Makefile            # Build system
+└── README.md           # This file
+```
 
 
 ## 🤝 Contributing
