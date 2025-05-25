@@ -1,84 +1,11 @@
 /*
-This is a simple kernel in C that allows you to type and see the text you type on the screen.
-It uses the BIOS keyboard interrupt to read input from the keyboard.
-It is a simple kernel that does not do anything else.
+ * Keyboard input functions for the kernel
+ * Handles keyboard scancode reading and conversion to ASCII
+ */
 
-Author: @Usama3627
-Date: 2025-05-22
-*/
+#include "kernel.h"
 
-#define VIDEO_MEMORY 0xb8000
-#define SCREEN_WIDTH 80
-#define SCREEN_HEIGHT 25
-#define WHITE_ON_BLACK 0x07
-#define VGA_COLOR_BLACK 0
-#define VGA_COLOR_BLUE 1
-#define VGA_COLOR_GREEN 2
-#define VGA_COLOR_CYAN 3
-#define VGA_COLOR_RED 4
-#define VGA_COLOR_MAGENTA 5
-#define VGA_COLOR_BROWN 6
-#define VGA_COLOR_LIGHT_GREY 7
-#define VGA_COLOR_DARK_GREY 8
-#define VGA_COLOR_LIGHT_BLUE 9
-#define VGA_COLOR_LIGHT_GREEN 10
-#define VGA_COLOR_LIGHT_CYAN 11
-#define VGA_COLOR_LIGHT_RED 12
-#define VGA_COLOR_LIGHT_MAGENTA 13
-#define VGA_COLOR_LIGHT_BROWN 14
-#define VGA_COLOR_WHITE 15
-
-
-
-static char* vidptr = (char*)VIDEO_MEMORY;
-static unsigned int cursor_pos = 0;
 static unsigned char last_scancode = 0;
-static unsigned int foreground_color = VGA_COLOR_WHITE;
-static unsigned int background_color = VGA_COLOR_BLACK;
-
-void kclear(void) {
-    unsigned int i = 0;
-    unsigned char attribute = (background_color << 4) | foreground_color;
-    
-    while (i < SCREEN_WIDTH * SCREEN_HEIGHT * 2) {
-        vidptr[i] = ' ';
-        vidptr[i + 1] = attribute;
-        i += 2;
-    }
-    cursor_pos = 0;
-}
-
-void kputc(char c) {
-    vidptr[cursor_pos] = c;
-    vidptr[cursor_pos + 1] = (background_color << 4) | foreground_color;
-    cursor_pos += 2;
-    if (c == '\n') {
-        cursor_pos = (cursor_pos / (SCREEN_WIDTH * 2)) * (SCREEN_WIDTH * 2) + SCREEN_WIDTH * 2;
-    }
-
-    if (cursor_pos >= SCREEN_WIDTH * SCREEN_HEIGHT * 2) {
-        cursor_pos = 0;
-    }
-}
-
-void kprint(const char* str) {
-    while (*str != '\0') {
-        kputc(*str++);
-    }
-}
-
-
-void ksetcolor(unsigned char fg, unsigned char bg) {
-    if (fg > 15 || bg > 15) {
-        return;
-    }
-    kprint("Setting color to ");
-    kprint(fg);
-    kprint(",");
-    kprint(bg);
-    foreground_color = fg;
-    background_color = bg;
-}
 
 char kgetc(void) {
     while (1) {
@@ -86,11 +13,9 @@ char kgetc(void) {
         // Read from keyboard port
         asm volatile("inb %1, %0" : "=a"(scancode) : "Nd"(0x60));
         
-        // Check for key press
         if (scancode < 0x80 && scancode != last_scancode) {
             last_scancode = scancode;
             
-            // Convert scancode to ASCII (US QWERTY layout)
             char ascii = 0;
             switch (scancode) {
                 // First row (QWERTY)
@@ -177,51 +102,4 @@ void kgets(char* buffer, unsigned int max_length) {
         }
     }
     buffer[i] = '\0'; 
-}
-
-void kmain(void) {
-    kclear();
-    
-    kprint("Hello from C kernel!\n");
-    
-    char input_buffer[80];
-    
-    while (1) {
-        // Ask for both foreground and background color
-        kprint("Enter foreground color (0-15): ");
-        kgets(input_buffer, 80);
-        int length = 0;
-        while (input_buffer[length] != '\0') {
-            length++;
-        }
-        // Convert the input to an integer
-        foreground_color = input_buffer[0] - '0';
-        kprint("Enter background color (0-15): ");
-        // Empty the input buffer
-        for (int i = 0; i < 80; i++) {
-            input_buffer[i] = '\0';
-        }
-        kgets(input_buffer, 80);
-        length = 0;
-        while (input_buffer[length] != '\0') {
-            length++;
-        }
-        // Convert the input to an integer
-        background_color = input_buffer[0] - '0';
-
-        
-        // Clear the screen
-        kclear();
-
-        // Ask to enter a text
-        kprint("Enter a text: ");
-        // Empty the input buffer
-        for (int i = 0; i < 80; i++) {
-            input_buffer[i] = '\0';
-        }
-        kgets(input_buffer, 80);
-
-        kprint("\nYou typed: ");
-        kprint(input_buffer);
-    }
-}
+} 
